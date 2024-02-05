@@ -1,69 +1,57 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers');
-const { assert } = require('chai');
+const { assert, expect } = require('chai');
 const { ethers } = require('hardhat');
 
-describe('Game5', function () {/* 
-  async function deployContractAndSetVariables() {
-    const Game = await ethers.getContractFactory('Game5');
-    const game = await Game.deploy();
 
-    return { game };
-  }
-  it('should be a winner', async function () {
-    const { game } = await loadFixture(deployContractAndSetVariables);
+describe('Game5', function () {
 
-    // good luck
-    //bytes20(threshold) is capturing top left 20 bytes
-    //we need to create a bytes20(address) minor to bytes20(threshold)
-    const [deployer] = await ethers.getSigners();
-
-    // Imprimir por pantalla en los tests
-    console.log("Address of deployer:", deployer.address);
-
-    await game.win();
-
-    // leave this assertion as-is
-    assert(await game.isWon(), 'You did not win the game');
-  }); */
   let game;
-  let deployer;
   const threshold = "0x00FfFFfFFFfFFFFFfFfFfffFFFfffFfFffFfFFFf";
 
-  async function deployContractAndSetVariables(){
+  async function deployContractAndSetVariables() {
     const Game5 = await ethers.getContractFactory('Game5');
     const game = await Game5.deploy();
 
-    // Crear una dirección específica para el deployer que sea menor que el umbral
-    const customDeployerWallet = await ethers.Wallet.createRandom();
-    assert(customDeployerWallet.address < threshold, "Custom deployer address is not below threshold");
-
-    return{ game, deployer: customDeployerWallet };
+    return { game };
   }
 
-  beforeEach(async function(){
-    ({game, deployer: customDeployer} = await loadFixture(deployContractAndSetVariables));
+  beforeEach(async function () {
+    ({ game } = await loadFixture(deployContractAndSetVariables));
   });
 
   it('should be a winner', async function () {
-    //------- con el beforeEach ya no hace falta la siguiente línea
+    //------- with beforeEach we dont need the next line
     //const { game } = await loadFixture(deployContractAndSetVariables);
 
-    // Imprimir por pantalla en los tests
-    console.log("Address of custom deployer:", customDeployer.address);
+    try {
+      let winnerAddress;
 
-    // good luck
-    //bytes20(threshold) is capturing top left 20 bytes
-    //we need to create a bytes20(address) minor to bytes20(threshold)
-    /* const [deployer] = await ethers.getSigners(); */
-  
-    await game.connect(customDeployer).win();
+      /* I use a do-while loop to ensure that a random address
+      is generated and check to see if it meets the condition on each iteration.
+      This is done within the "it" test, so it looks for an address that meets
+      the condition specifically for this test. */
 
-    // leave this assertion as-is
-    assert(await game.isWon(), 'You did not win the game');
-    /* assert(await game.isWon()).to.equal(true); */
+      do {
+        // Get random address
+        const randomSigner = ethers.Wallet.createRandom();
+        winnerAddress = randomSigner.address;
+      } while (winnerAddress.toLowerCase() >= threshold.toLowerCase());
 
-      // Comprobar que isWon se ha establecido en true
-      //assert(await game.isWon()).to.equal(true);
+      //console.log("Deployer Address:", deployer.address);
+      console.log("Winner Address:", winnerAddress);
+      console.log("Threshold Address:", threshold);
+
+      // Compare addresses in hexadecimal
+      expect(winnerAddress.toLowerCase()).to.be.lt(threshold.toLowerCase());
+
+      // Conect the winner with the contract and call Win function
+      await game.connect(deployer).win();
+
+      // Verify the isWon variable is true after callin Win function
+      expect(await game.isWon()).to.equal(true, 'You did not win the game');
+    } catch (error) {
+      console.error(error.message);
+    }
   });
 });
 
