@@ -7,6 +7,7 @@ describe('Game5', function () {
 
   let game;
   const threshold = "0x00FfFFfFFFfFFFFFfFfFfffFFFfffFfFffFfFFFf";
+  const thresholdInt = parseInt(threshold.substring(2), 16);
 
   async function deployContractAndSetVariables() {
     const Game5 = await ethers.getContractFactory('Game5');
@@ -24,7 +25,7 @@ describe('Game5', function () {
     //const { game } = await loadFixture(deployContractAndSetVariables);
 
     try {
-      let winnerAddress;
+      let winnerAddressInt;
 
       /* I use a do-while loop to ensure that a random address
       is generated and check to see if it meets the condition on each iteration.
@@ -35,17 +36,20 @@ describe('Game5', function () {
         // Get random address
         const randomSigner = ethers.Wallet.createRandom();
         winnerAddress = randomSigner.address;
-      } while (winnerAddress.toLowerCase() >= threshold.toLowerCase());
+        winnerAddressInt = parseInt(winnerAddress.substring(2), 16);
 
-      //console.log("Deployer Address:", deployer.address);
+        //console.log("Looking for winner Address:", winnerAddress);
+      } while (winnerAddressInt >= thresholdInt);
+      //while (winnerAddress.toLowerCase() >= threshold.toLowerCase());
+
+      console.log("Winner Address INT :", winnerAddressInt);
+      console.log("Threshold Address INT:", thresholdInt);
+
       console.log("Winner Address:", winnerAddress);
       console.log("Threshold Address:", threshold);
 
-      // Compare addresses in hexadecimal
-      expect(winnerAddress.toLowerCase()).to.be.lt(threshold.toLowerCase());
-
       // Conect the winner with the contract and call Win function
-      await game.connect(deployer).win();
+      await game.connect(winnerAddress).win();
 
       // Verify the isWon variable is true after callin Win function
       expect(await game.isWon()).to.equal(true, 'You did not win the game');

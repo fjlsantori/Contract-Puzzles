@@ -21,12 +21,18 @@ describe('Game5', function () {
       const randomSigner = ethers.Wallet.createRandom();
       const winnerAddress = randomSigner.address;
 
-      console.log("Winner Address:", winnerAddress);
-      console.log("Threshold Address:", threshold);
+      console.log("Looking for winner Address:", winnerAddress);
 
       // Convertir direcciones a números enteros y compararlos
       const winnerAddressBigInt = ethers.BigNumber.from(winnerAddress);
 
+      /* el bucle do-while(true) se utiliza porque se desea generar direcciones 
+      aleatorias hasta que se encuentre una dirección que cumpla con la condición 
+      específica (ser menor que el umbral). Como no hay una condición de 
+      salida definida dentro del bucle, se utiliza true como una forma de 
+      hacer que el bucle se ejecute de forma indefinida hasta que se 
+      cumpla la condición buscada. La función se encarga de salir del 
+      bucle cuando se encuentra un Signer válido. */
       if (winnerAddressBigInt.lt(thresholdBigInt)) {
         return randomSigner;
       }
@@ -38,6 +44,7 @@ describe('Game5', function () {
   });
 
   it('should be a winner', async function () {
+    console.log("Threshold Address:", threshold);
     try {
       // Encontrar un ganador válido
       const winnerSigner = await findValidWinner();
